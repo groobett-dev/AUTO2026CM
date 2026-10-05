@@ -154,6 +154,7 @@ jobs:
           BEST_SUB = "${{ secrets.VAR_BEST_SUB }}"
           TCP_CONCURRENT_DIAL = "${{ secrets.VAR_TCP_CONCURRENT_DIAL }}"
           PROXY_CONCURRENT_DIAL = "${{ secrets.VAR_PROXY_CONCURRENT_DIAL }}"
+          PROXYIP = "${{ secrets.VAR_PROXYIP || 'proxyip.cmliussss.net,cf.090227.xyz' }}"
 
           [[kv_namespaces]]
           binding = "KV"
