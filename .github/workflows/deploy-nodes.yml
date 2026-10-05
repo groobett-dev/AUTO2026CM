@@ -13,7 +13,7 @@ on:
       - '.github/workflows/deploy-nodes.yml'
 
 jobs:
-  sync-upstream:
+  sync_upstream:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -51,9 +51,9 @@ jobs:
           fi
 
   deploy:
-    needs: sync-upstream
+    needs: sync_upstream
     # 只有在手动触发、直接向 main 推送代码、或定时检查确实发现上游更新时，才执行部署推送；不更新不推送
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.sync-upstream.outputs.has_changes == 'true'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -96,7 +96,19 @@ jobs:
           sed -i 's/const /let /g' raw_source.js
           
           # 3. 使用 javascript-obfuscator 进行深度加密与流混淆
-          javascript-obfuscator raw_source.js             --output obfuscated_worker.js             --compact true             --control-flow-flattening true             --control-flow-flattening-threshold 0.5             --numbers-to-expressions true             --simplify true             --string-array true             --string-array-encoding 'base64'             --string-array-threshold 0.8             --split-strings true             --split-strings-chunk-length 5             --transform-object-keys true
+          javascript-obfuscator raw_source.js \
+            --output obfuscated_worker.js \
+            --compact true \
+            --control-flow-flattening true \
+            --control-flow-flattening-threshold 0.5 \
+            --numbers-to-expressions true \
+            --simplify true \
+            --string-array true \
+            --string-array-encoding 'base64' \
+            --string-array-threshold 0.8 \
+            --split-strings true \
+            --split-strings-chunk-length 5 \
+            --transform-object-keys true
 
       - name: Resolve Node Credentials
         id: creds
