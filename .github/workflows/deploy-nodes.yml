@@ -52,7 +52,7 @@ jobs:
 
   deploy:
     needs: sync_upstream
-    # 只有在手动触发、直接向 main 推送代码、或定时检查确实发现上游更新时，才执行部署推送；不更新不推送
+    # 核心判断逻辑：定时调度时，仅当上游有更新 (has_changes == 'true') 时才触发部署；无更新则不部署不推送
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -84,7 +84,7 @@ jobs:
         run: |
           cp _worker.js raw_source.js
           
-          # 1. 敏感协议关键词特征打碎 (修复单双引号匹配语法)
+          # 1. 敏感协议关键词特征打碎 (准确支持单双引号切分)
           sed -i 's/"vless"/("vl"+"ess")/gI' raw_source.js
           sed -i "s/'vless'/('vl'+'ess')/gI" raw_source.js || true
           sed -i 's/"trojan"/("tr"+"ojan")/gI' raw_source.js
@@ -92,7 +92,7 @@ jobs:
           sed -i 's/"shadowsocks"/("ss"+"socks")/gI' raw_source.js || true
           
           # 2. 避免原生常量 const 在重写 AST 冲突
-          sed -i 's/const/let/g' raw_source.js
+          sed -i 's/\bconst\b/let/g' raw_source.js
           sed -i 's/const /let /g' raw_source.js
           
           # 3. 使用 javascript-obfuscator 进行深度加密与流混淆
