@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -35,7 +38,7 @@ jobs:
       - name: Run Upstream Sync and Transformation
         id: sync
         run: |
-          python scripts/sync_upstream.py
+          python -u scripts/sync_upstream.py || (echo 'SYNC SCRIPT FAILED' && exit 1)
           if [ "${{ steps.sync.outputs.has_changes }}" == "true" ] || [ -f .last_upstream_sha ]; then
             git add _worker.js .last_upstream_sha
             git diff --quiet && git diff --staged --quiet || git commit -m "chore(sync): update _worker.js with upstream + Chinese transformation"
