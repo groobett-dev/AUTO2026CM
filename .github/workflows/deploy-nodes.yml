@@ -37,19 +37,29 @@ jobs:
       - name: Check and Sync with Upstream
         id: sync
         run: |
-          git remote add upstream https://github.com/cmliu/edgetunnel.git || true
-          git fetch upstream main
+          # 1. 检查 upstream 是否存在并获取最新 main
+          git remote add upstream https://github.com/cmliu/edgetunnel.git || git remote set-url upstream https://github.com/cmliu/edgetunnel.git
+          git fetch upstream main --depth=10
 
-          COMMITS_BEHIND=$(git rev-list --count HEAD..upstream/main)
-          echo "Commits behind upstream: $COMMITS_BEHIND"
+          UPSTREAM_HEAD=$(git rev-parse upstream/main)
+          echo "Upstream HEAD: $UPSTREAM_HEAD"
 
-          if [ "$COMMITS_BEHIND" -gt 0 ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Changes detected or manual trigger! Pulling upstream _worker.js..."
-            git checkout upstream/main -- _worker.js || true
+          # 记录上次同步的上游 commit SHA
+          LAST_SYNCED=""
+          if [ -f .last_upstream_sha ]; then
+            LAST_SYNCED=$(cat .last_upstream_sha)
+          fi
+          echo "Last Synced SHA: $LAST_SYNCED"
+
+          # 判断是否有更新或为手动触发
+          if [ "$UPSTREAM_HEAD" != "$LAST_SYNCED" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Changes detected or manual trigger! Extracting upstream _worker.js..."
+            git checkout upstream/main -- _worker.js || git show upstream/main:_worker.js > _worker.js
 
             python scripts/transform.py _worker.js _worker.js
+            echo "$UPSTREAM_HEAD" > .last_upstream_sha
 
-            git add _worker.js
+            git add _worker.js .last_upstream_sha
             git commit -m "chore(sync): auto sync with upstream cmliu/edgetunnel and apply Chinese transformation" || true
             git push origin main || true
             echo "has_changes=true" >> $GITHUB_OUTPUT
