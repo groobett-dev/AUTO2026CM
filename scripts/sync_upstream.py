@@ -48,14 +48,11 @@ if has_changes:
     gh_output = os.environ.get("GITHUB_OUTPUT")
     if gh_output:
         with open(gh_output, "a", encoding="utf-8") as f:
-            f.write("has_changes=true
-")
-            f.write(f"upstream_sha={upstream_sha}
-")
+            f.write("has_changes=true\n")
+            f.write(f"upstream_sha={upstream_sha}\n")
 else:
     print("No upstream changes. Upstream is in sync.")
     gh_output = os.environ.get("GITHUB_OUTPUT")
     if gh_output:
         with open(gh_output, "a", encoding="utf-8") as f:
-            f.write("has_changes=false
-")
+            f.write("has_changes=false\n")
