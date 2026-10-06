@@ -1,4 +1,4 @@
-import os, urllib.request, json, ssl, base64, subprocess
+import os, urllib.request, json, ssl, subprocess
 
 UPSTREAM_REPO = "cmliu/edgetunnel"
 LOCAL_FILE = "_worker.js"
@@ -9,7 +9,6 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-# 1. 检查上游最新 commit
 req = urllib.request.Request(f"https://api.github.com/repos/{UPSTREAM_REPO}/commits/main", headers={
     "User-Agent": "Mozilla/5.0"
 })
@@ -41,20 +40,22 @@ if has_changes:
     with open(LOCAL_FILE, "w", encoding="utf-8") as f:
         f.write(raw_code)
 
-    # 执行转换脚本
     subprocess.run(["python", "scripts/transform.py", LOCAL_FILE, LOCAL_FILE], check=True)
 
     with open(RECORD_FILE, "w", encoding="utf-8") as f:
         f.write(upstream_sha)
 
-    # 输出给 GitHub Actions
-    with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-        f.write("has_changes=true
+    gh_output = os.environ.get("GITHUB_OUTPUT")
+    if gh_output:
+        with open(gh_output, "a", encoding="utf-8") as f:
+            f.write("has_changes=true
 ")
-        f.write(f"upstream_sha={upstream_sha}
+            f.write(f"upstream_sha={upstream_sha}
 ")
 else:
     print("No upstream changes. Upstream is in sync.")
-    with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-        f.write("has_changes=false
+    gh_output = os.environ.get("GITHUB_OUTPUT")
+    if gh_output:
+        with open(gh_output, "a", encoding="utf-8") as f:
+            f.write("has_changes=false
 ")
