@@ -37,32 +37,593 @@ function 初始化环境(env) {
 	}
 }
 
+
+function 生成企业前台网页(hostname, uuid) {
+	const host = hostname || '';
+	let 品牌名称 = 'CM Cloud Global';
+	let 企业标语 = '下一代全球边缘云与智能网络计算平台';
+	let 英文标语 = 'Next-Generation Global Edge & Intelligent Computing Architecture';
+	let 主题色 = '#3b82f6';
+	let 背景渐变 = 'linear-gradient(135deg, #0a0f1d 0%, #070a14 100%)';
+	let 节点编号 = '206';
+	let 核心业务 = [
+		{ 标题: '全球边缘计算网络', 描述: '依托 330+ 边缘数据中心构建超低时延边缘容器与分布式执行环境。' },
+		{ 标题: '智能动态流量编排', 描述: 'AI 驱动的多链路 BGP 智能路由决策，提供 99.999% 高可用网络冗余。' },
+		{ 标题: '多层零信任安全架构', 描述: '深度集成 mTLS、零信任网关与分布式 DDoS 防御体系。' }
+	];
+
+	if (host.includes('207')) {
+		节点编号 = '207';
+		品牌名称 = 'CM Matrix Data';
+		企业标语 = '超大规模分布式数据中继与实时传输系统';
+		英文标语 = 'Hyperscale Distributed Data Relay & Real-time Transmission';
+		主题色 = '#10b981';
+		背景渐变 = 'linear-gradient(135deg, #061a14 0%, #030d0a 100%)';
+		核心业务 = [
+			{ 标题: '分布式高性能消息总线', 描述: '纳秒级序列化流式数据交换管道，支撑全球多活分布式架构。' },
+			{ 标题: '边缘持久化 KV 存储', 描述: '毫秒级全网强一致性分布式键值存储系统，保障业务状态实时同步。' },
+			{ 标题: '全链路零损耗压缩加速', 描述: '基于硬件加速的实时自适应数据压缩协议，网络传输带宽降低 60%。' }
+		];
+	} else if (host.includes('208')) {
+		节点编号 = '208';
+		品牌名称 = 'CM Quantum Security';
+		企业标语 = '企业级下一代边缘安全防线与自适应加密体系';
+		英文标语 = 'Enterprise-grade Edge Defense & Adaptive Security Framework';
+		主题色 = '#8b5cf6';
+		背景渐变 = 'linear-gradient(135deg, #130924 0%, #0a0414 100%)';
+		核心业务 = [
+			{ 标题: '自适应动态加密链路', 描述: '量子抗性端到端密钥协商与自适应流量指纹混淆保护。' },
+			{ 标题: '智能威胁感知与清洗', 描述: '毫秒级阻断未知恶意扫描与非法嗅探，构筑铜墙铁壁般的边界防御。' },
+			{ 标题: '细粒度访问控制引擎', 描述: '基于硬件身份与行为信任评分的微隔离授权，杜绝越权访问。' }
+		];
+	} else if (host.includes('209')) {
+		节点编号 = '209';
+		品牌名称 = 'CM Cyber Fusion';
+		企业标语 = '面向未来的全球智能网络互联与算力调度平台';
+		英文标语 = 'Intelligent Global Interconnection & Computing Scheduling Platform';
+		主题色 = '#f59e0b';
+		背景渐变 = 'linear-gradient(135deg, #1c1305 0%, #0f0a02 100%)';
+		核心业务 = [
+			{ 标题: '异构算力边缘调度', 描述: '跨地域 GPU 与轻量无服务器算力网格，实现弹性算力毫秒级调度。' },
+			{ 标题: '智能 SD-WAN 专线互联', 描述: '软件定义广域网全球覆盖，提供媲美国际专线的超低丢包率体验。' },
+			{ 标题: '全场景自适应协议转换', 描述: '无缝桥接标准 HTTP/3、gRPC 与原生 WebSocket，实现全栈业务互通。' }
+		];
+	}
+
+	return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${品牌名称} - ${企业标语}</title>
+	<style>
+		* { box-sizing: border-box; margin: 0; padding: 0; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+			background: ${背景渐变};
+			color: #e2e8f0;
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+		}
+		header {
+			padding: 20px 40px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+			backdrop-filter: blur(12px);
+		}
+		.logo {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			font-size: 22px;
+			font-weight: 700;
+			color: #ffffff;
+		}
+		.logo-badge {
+			background: ${主题色};
+			color: #ffffff;
+			font-size: 11px;
+			font-weight: 800;
+			padding: 4px 8px;
+			border-radius: 6px;
+			text-transform: uppercase;
+		}
+		.nav-status {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 13px;
+			color: #94a3b8;
+		}
+		.status-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #10b981;
+			box-shadow: 0 0 10px #10b981;
+		}
+		main {
+			flex: 1;
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 60px 24px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+		.hero-tag {
+			display: inline-block;
+			padding: 6px 16px;
+			border-radius: 9999px;
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			font-size: 13px;
+			color: ${主题色};
+			font-weight: 600;
+			margin-bottom: 24px;
+		}
+		h1 {
+			font-size: 44px;
+			font-weight: 800;
+			line-height: 1.25;
+			color: #ffffff;
+			margin-bottom: 16px;
+		}
+		.sub-hero {
+			font-size: 18px;
+			color: #94a3b8;
+			max-width: 760px;
+			margin-bottom: 48px;
+			line-height: 1.6;
+		}
+		.cards {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 24px;
+			width: 100%;
+			margin-bottom: 50px;
+		}
+		.card {
+			background: rgba(255, 255, 255, 0.03);
+			border: 1px solid rgba(255, 255, 255, 0.07);
+			border-radius: 16px;
+			padding: 32px 24px;
+			text-align: left;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+		.card:hover {
+			transform: translateY(-4px);
+			border-color: ${主题色};
+			box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+		}
+		.card-title {
+			font-size: 18px;
+			font-weight: 700;
+			color: #ffffff;
+			margin-bottom: 12px;
+		}
+		.card-desc {
+			font-size: 14px;
+			color: #94a3b8;
+			line-height: 1.6;
+		}
+		.metrics {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 20px;
+			width: 100%;
+			background: rgba(255, 255, 255, 0.02);
+			border: 1px solid rgba(255, 255, 255, 0.06);
+			border-radius: 16px;
+			padding: 30px 20px;
+			margin-bottom: 40px;
+		}
+		.metric-item {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+		.metric-val {
+			font-size: 28px;
+			font-weight: 800;
+			color: #ffffff;
+		}
+		.metric-lbl {
+			font-size: 12px;
+			color: #64748b;
+			text-transform: uppercase;
+		}
+		footer {
+			border-top: 1px solid rgba(255, 255, 255, 0.06);
+			padding: 24px 40px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			font-size: 13px;
+			color: #64748b;
+		}
+		@media (max-width: 768px) {
+			header { padding: 16px 20px; }
+			h1 { font-size: 28px; }
+			.metrics { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+			footer { flex-direction: column; gap: 12px; }
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="logo">
+			<span>${品牌名称}</span>
+			<span class="logo-badge">Node ${节点编号}</span>
+		</div>
+		<div class="nav-status">
+			<span class="status-dot"></span>
+			<span>全球边缘网络运行正常</span>
+		</div>
+	</header>
+	<main>
+		<div class="hero-tag">ENTERPRISE EDGE ARCHITECTURE</div>
+		<h1>${企业标语}</h1>
+		<p class="sub-hero">${英文标语}。服务已接入 CM 分布式云加速体系，全节点毫秒级同步调度。</p>
+		
+		<div class="cards">
+			<div class="card">
+				<h3 class="card-title">${核心业务[0].标题}</h3>
+				<p class="card-desc">${核心业务[0].描述}</p>
+			</div>
+			<div class="card">
+				<h3 class="card-title">${核心业务[1].标题}</h3>
+				<p class="card-desc">${核心业务[1].描述}</p>
+			</div>
+			<div class="card">
+				<h3 class="card-title">${核心业务[2].标题}</h3>
+				<p class="card-desc">${核心业务[2].描述}</p>
+			</div>
+		</div>
+
+		<div class="metrics">
+			<div class="metric-item">
+				<span class="metric-val">330+</span>
+				<span class="metric-lbl">全球边缘数据中心</span>
+			</div>
+			<div class="metric-item">
+				<span class="metric-val">&lt; 15ms</span>
+				<span class="metric-lbl">平均边缘路由时延</span>
+			</div>
+			<div class="metric-item">
+				<span class="metric-val">99.999%</span>
+				<span class="metric-lbl">企业 SLA 可用率</span>
+			</div>
+			<div class="metric-item">
+				<span class="metric-val">Tbps 级</span>
+				<span class="metric-lbl">峰值弹性防御吞吐</span>
+			</div>
+		</div>
+	</main>
+	<footer>
+		<div>&copy; 2026 ${品牌名称} (CM Tech Group). 保留所有权利。</div>
+		<div>边缘节点标识: ${host} | 运行环境: Cloudflare Workers Engine</div>
+	</footer>
+</body>
+</html>`;
+}
+
+
+function 生成订阅管理前端(hostname, uuid, rawSub, decodedLinks) {
+	const host = hostname || '';
+	const links = decodedLinks.filter(l => l.trim());
+	const subUrl = `https://${host}/${uuid}`;
+	const linksJson = JSON.stringify(links);
+
+	return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CM 智能网络网关 - 凭据与节点管理</title>
+	<style>
+		* { box-sizing: border-box; margin: 0; padding: 0; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+			background: #0b0f19;
+			color: #e2e8f0;
+			min-height: 100vh;
+			padding: 30px 20px;
+			display: flex;
+			justify-content: center;
+		}
+		.container {
+			max-width: 900px;
+			width: 100%;
+		}
+		.header {
+			background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 16px;
+			padding: 24px;
+			margin-bottom: 24px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 16px;
+		}
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+		.logo-badge {
+			background: #3b82f6;
+			color: #fff;
+			font-size: 11px;
+			font-weight: 800;
+			padding: 4px 8px;
+			border-radius: 6px;
+		}
+		.brand h1 {
+			font-size: 20px;
+			font-weight: 700;
+			color: #fff;
+		}
+		.node-badge {
+			background: rgba(16, 185, 129, 0.15);
+			color: #10b981;
+			border: 1px solid rgba(16, 185, 129, 0.3);
+			padding: 4px 12px;
+			border-radius: 9999px;
+			font-size: 13px;
+			font-weight: 600;
+		}
+		.card {
+			background: rgba(30, 41, 59, 0.5);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 16px;
+			padding: 24px;
+			margin-bottom: 20px;
+			backdrop-filter: blur(12px);
+		}
+		.card-title {
+			font-size: 16px;
+			font-weight: 600;
+			color: #94a3b8;
+			margin-bottom: 16px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.sub-box {
+			display: flex;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+		.input-url {
+			flex: 1;
+			background: #0f172a;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: #38bdf8;
+			padding: 12px 16px;
+			border-radius: 8px;
+			font-family: monospace;
+			font-size: 13px;
+			outline: none;
+		}
+		.btn {
+			background: #2563eb;
+			color: #fff;
+			border: none;
+			padding: 12px 20px;
+			border-radius: 8px;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.2s;
+			white-space: nowrap;
+		}
+		.btn:hover {
+			background: #1d4ed8;
+		}
+		.btn-outline {
+			background: transparent;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			color: #cbd5e1;
+		}
+		.btn-outline:hover {
+			background: rgba(255, 255, 255, 0.05);
+			border-color: #fff;
+		}
+		.node-item {
+			background: #0f172a;
+			border: 1px solid rgba(255, 255, 255, 0.06);
+			border-radius: 10px;
+			padding: 16px;
+			margin-bottom: 12px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 12px;
+		}
+		.node-info {
+			flex: 1;
+			overflow: hidden;
+		}
+		.node-name {
+			font-size: 14px;
+			font-weight: 600;
+			color: #fff;
+			margin-bottom: 4px;
+		}
+		.node-link {
+			font-size: 12px;
+			color: #64748b;
+			font-family: monospace;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.tips {
+			font-size: 13px;
+			color: #64748b;
+			line-height: 1.6;
+		}
+		.toast {
+			position: fixed;
+			bottom: 30px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: #10b981;
+			color: #fff;
+			padding: 10px 24px;
+			border-radius: 9999px;
+			font-size: 14px;
+			font-weight: 600;
+			display: none;
+			box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+			z-index: 100;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<div class="brand">
+				<span class="logo-badge">CM GATEWAY</span>
+				<h1>CM 边缘网络服务控制台</h1>
+			</div>
+			<div class="node-badge">● 节点 ${host} 在线</div>
+		</div>
+
+		<div class="card">
+			<div class="card-title">
+				<span>通用订阅地址 (适用于各种网络客户端)</span>
+				<span style="font-size: 12px; font-weight: normal; color: #64748b;">客户端请求时自动返回订阅数据</span>
+			</div>
+			<div class="sub-box">
+				<input type="text" class="input-url" id="subUrlInput" value="${subUrl}" readonly>
+				<button class="btn" onclick="copyText('${subUrl}', '订阅地址已复制')">复制订阅链接</button>
+			</div>
+			<p class="tips">直接将上述链接复制到任何支持订阅导入的客户端即可自动解析全部节点配置。</p>
+		</div>
+
+		<div class="card">
+			<div class="card-title">
+				<span>当前可用直连节点列表 (${links.length} 个)</span>
+				<button class="btn btn-outline" style="padding: 6px 14px; font-size: 13px;" onclick="copyAllNodes()">复制全部直连链接</button>
+			</div>
+			<div id="nodesList">
+				${links.map((link, idx) => {
+					const nameMatch = link.match(/#(.+)$/);
+					const name = nameMatch ? decodeURIComponent(nameMatch[1]) : `节点 #${idx+1}`;
+					return `
+					<div class="node-item">
+						<div class="node-info">
+							<div class="node-name">${name}</div>
+							<div class="node-link">${link}</div>
+						</div>
+						<button class="btn btn-outline" style="padding: 8px 14px; font-size: 12px;" onclick="copyText('${link}', '节点链接已复制')">复制链接</button>
+					</div>
+					`;
+				}).join('')}
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-title">高级配置与动态路由参数</div>
+			<p class="tips">
+				• <strong>自定义反代/中转 IP</strong>：如需在特定网络下切换回退地址，可在链接后增加参数，例如 <code>${subUrl}?proxyip=proxyip.cmliussss.net</code><br>
+				• <strong>家宽专属路由</strong>：如果在配置中启用了家宽链式，在订阅地址后加上 <code>?target=vg</code> 即可获取家宽链式配置。
+			</p>
+		</div>
+	</div>
+
+	<div class="toast" id="toast">已复制到剪贴板</div>
+
+	<script>
+		const allLinks = ${linksJson};
+		function showToast(msg) {
+			const t = document.getElementById('toast');
+			t.textContent = msg;
+			t.style.display = 'block';
+			setTimeout(() => { t.style.display = 'none'; }, 2000);
+		}
+		function copyText(txt, successMsg) {
+			navigator.clipboard.writeText(txt).then(() => {
+				showToast(successMsg || '已复制到剪贴板');
+			}).catch(() => {
+				const i = document.createElement('textarea');
+				i.value = txt;
+				document.body.appendChild(i);
+				i.select();
+				document.execCommand('copy');
+				document.body.removeChild(i);
+				showToast(successMsg || '已复制到剪贴板');
+			});
+		}
+		function copyAllNodes() {
+			copyText(allLinks.join('\n'), '全部节点链接已复制');
+		}
+	</script>
+</body>
+</html>`;
+}
+
+
+async function 生成订阅配置对象(认证令牌, 主机名) {
+	const 协议 = 解码64('dmxlc3M=');
+	const 域名 = 主机名 || '';
+	const 地址列表 = await 收集优选地址(域名);
+	const 链接列表 = 地址列表.map((项) => {
+		const 安全地址 = 项.地址.includes(':') ? `[${项.地址}]` : 项.地址;
+		const 是明文 = 明文端口列表.includes(Number(项.端口));
+		const 安全参数 = 是明文
+			? 'security=none'
+			: `security=tls&sni=${域名}&fp=chrome`;
+		return `${协议}://${认证令牌}@${安全地址}:${项.端口}` +
+			`?encryption=none&${安全参数}&type=ws&host=${域名}&path=%2F%3Fed%3D2048` +
+			`#${encodeURIComponent(项.备注)}`;
+	});
+	return {
+		原始文本: btoa(链接列表.join('\n')),
+		明文列表: 链接列表
+	};
+}
+
 export default {
-	/**
-	 * @param {import("@cloudflare/workers-types").Request} request
-	 * @param {any} env
-	 * @param {any} ctx
-	 * @returns {Promise<Response>}
-	 */
 	async fetch(request, env, ctx) {
 		try {
 			初始化环境(env);
 			const 升级头 = request.headers.get('Upgrade');
 			if (!升级头 || 升级头 !== 'websocket') {
 				const 网址 = new URL(request.url);
+				const 访问主机 = request.headers.get('Host') || '';
+				const 客户端UA = (request.headers.get('User-Agent') || '').toLowerCase();
+				const 接受格式 = request.headers.get('Accept') || '';
+				const 是浏览器 = 接受格式.includes('text/html') || 客户端UA.includes('mozilla') || 客户端UA.includes('chrome') || 客户端UA.includes('safari');
+
 				switch (网址.pathname) {
 					case '/':
-						return new Response('<!DOCTYPE html><html><head><title>Edge Gateway</title></head><body style="font-family:sans-serif;text-align:center;padding:50px;"><h2>Edge Gateway Operational</h2><p>Node active.</p></body></html>', {
+						return new Response(生成企业前台网页(访问主机, 认证令牌), {
 							status: 200,
 							headers: { 'Content-Type': 'text/html;charset=utf-8' }
 						});
 					case `/${认证令牌}`: {
 						const 目标 = (网址.searchParams.get('target') || '').toLowerCase();
 						if (目标 === 'vg' || 目标 === 'jk') {
-							return await 处理家宽订阅(认证令牌, request.headers.get('Host'));
+							return await 处理家宽订阅(认证令牌, 访问主机);
 						}
-						const 订阅内容 = await 生成订阅配置(认证令牌, request.headers.get('Host'));
-						return new Response(`${订阅内容}`, {
+						const 订阅结果 = await 生成订阅配置对象(认证令牌, 访问主机);
+						// 如果是普通浏览器直接点击访问，展示可视化管理页面；客户端访问返回 Base64 订阅纯文本
+						if (是浏览器 && !网址.searchParams.has('raw')) {
+							return new Response(生成订阅管理前端(访问主机, 认证令牌, 订阅结果.原始文本, 订阅结果.明文列表), {
+								status: 200,
+								headers: { 'Content-Type': 'text/html;charset=utf-8' }
+							});
+						}
+						return new Response(订阅结果.原始文本, {
 							status: 200,
 							headers: {
 								"Content-Type": "text/plain;charset=utf-8",
@@ -83,12 +644,6 @@ export default {
 };
 
 
-
-
-/**
- *
- * @param {import("@cloudflare/workers-types").Request} request
- */
 async function 处理套接字升级(request) {
 
 	/** @type {import("@cloudflare/workers-types").WebSocket[]} */
