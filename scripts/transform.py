@@ -302,6 +302,17 @@ function 生成企业前台网页(hostname, uuid) {
     replacement_nginx = "return new Response(生成企业前台网页(url.hostname, userID), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
     code = code.replace(target_nginx, replacement_nginx)
 
+    target_uuid_logout = "} else if (访问路径 === 'logout' || uuidRegex.test(访问路径)) {//清除cookie并跳转到登录页面"
+    replacement_uuid = """} else if (访问路径 === 'logout') {//清除cookie并跳转到登录页面
+					const 响应 = new Response('重定向中...', { status: 302, headers: { 'Location': '/login' } });
+					响应.headers.set('Set-Cookie', 'auth=; Path=/; Max-Age=0; HttpOnly');
+					return 响应;
+				} else if (uuidRegex.test(访问路径)) {//直接访问UUID路径：自动重定向到该节点的安全订阅地址
+					const 订阅TOKEN = await MD5MD5(host + userID);
+					return new Response('正在跳转至订阅...', { status: 302, headers: { 'Location': `/sub?token=${订阅TOKEN}` } });"""
+    code = code.replace(target_uuid_logout, replacement_uuid)
+
+
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(code)
 
