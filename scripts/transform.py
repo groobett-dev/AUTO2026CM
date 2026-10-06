@@ -298,10 +298,17 @@ function 生成企业前台网页(hostname, uuid) {
     if pos_export != -1:
         code = code[:pos_export] + "\n" + corporate_func + "\n" + code[pos_export:]
 
+    # 3. 根路径优先展示对应企业官网，而非反代 example.com 或 nginx
+    target_fake_line = "let 伪装页URL = env.URL || 'nginx';"
+    replacement_fake_line = """if (url.pathname === '/' || !url.pathname.slice(1)) return new Response(生成企业前台网页(url.hostname, userID), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
+		let 伪装页URL = env.URL || 'nginx';"""
+    code = code.replace(target_fake_line, replacement_fake_line)
+
     target_nginx = "return new Response(await nginx(), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
     replacement_nginx = "return new Response(生成企业前台网页(url.hostname, userID), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
     code = code.replace(target_nginx, replacement_nginx)
 
+    # 4. 直接访问 /{UUID} 时自动重定向到 /sub?token=... 专属订阅
     target_uuid_logout = "} else if (访问路径 === 'logout' || uuidRegex.test(访问路径)) {//清除cookie并跳转到登录页面"
     replacement_uuid = """} else if (访问路径 === 'logout') {//清除cookie并跳转到登录页面
 					const 响应 = new Response('重定向中...', { status: 302, headers: { 'Location': '/login' } });
@@ -311,7 +318,6 @@ function 生成企业前台网页(hostname, uuid) {
 					const 订阅TOKEN = await MD5MD5(host + userID);
 					return new Response('正在跳转至订阅...', { status: 302, headers: { 'Location': `/sub?token=${订阅TOKEN}` } });"""
     code = code.replace(target_uuid_logout, replacement_uuid)
-
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(code)
