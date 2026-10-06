@@ -21,8 +21,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
@@ -34,43 +32,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Check and Sync with Upstream
+      - name: Run Upstream Sync and Transformation
         id: sync
         run: |
-          # 1. 检查 upstream 是否存在并获取最新 main
-          git remote add upstream https://github.com/cmliu/edgetunnel.git || git remote set-url upstream https://github.com/cmliu/edgetunnel.git
-          git fetch upstream main --depth=10
-
-          UPSTREAM_HEAD=$(git rev-parse upstream/main)
-          echo "Upstream HEAD: $UPSTREAM_HEAD"
-
-          # 记录上次同步的上游 commit SHA
-          LAST_SYNCED=""
-          if [ -f .last_upstream_sha ]; then
-            LAST_SYNCED=$(cat .last_upstream_sha)
-          fi
-          echo "Last Synced SHA: $LAST_SYNCED"
-
-          # 判断是否有更新或为手动触发
-          if [ "$UPSTREAM_HEAD" != "$LAST_SYNCED" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Changes detected or manual trigger! Extracting upstream _worker.js..."
-            git checkout upstream/main -- _worker.js || git show upstream/main:_worker.js > _worker.js
-
-            python scripts/transform.py _worker.js _worker.js
-            echo "$UPSTREAM_HEAD" > .last_upstream_sha
-
+          python scripts/sync_upstream.py
+          if [ "${{ steps.sync.outputs.has_changes }}" == "true" ] || [ -f .last_upstream_sha ]; then
             git add _worker.js .last_upstream_sha
-            git commit -m "chore(sync): auto sync with upstream cmliu/edgetunnel and apply Chinese transformation" || true
+            git diff --quiet && git diff --staged --quiet || git commit -m "chore(sync): update _worker.js with upstream + Chinese transformation"
             git push origin main || true
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "No upstream changes. Upstream is in sync."
-            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
   deploy:
     needs: sync_upstream
-    # 仅在手动触发、或检查到上游更新 (has_changes == 'true') 时才触发部署
+    # 核心原则：仅在检测到上游有新更新 (has_changes == 'true') 或手动主动触发时，才推送到 4 个 Worker
     if: github.event_name == 'workflow_dispatch' || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
