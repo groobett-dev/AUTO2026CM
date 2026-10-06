@@ -1,19 +1,24 @@
 import sys
 
-input_path = r"D:\antigravity\.gemini\antigravity\upstream_worker_raw.js"
-output_path = r"D:\antigravity\.gemini\antigravity\transformed_worker.js"
+def main():
+    if len(sys.argv) < 3:
+        input_path = "_worker.js"
+        output_path = "_worker.js"
+    else:
+        input_path = sys.argv[1]
+        output_path = sys.argv[2]
 
-with open(input_path, "r", encoding="utf-8-sig") as f:
-    code = f.read()
+    with open(input_path, "r", encoding="utf-8-sig") as f:
+        code = f.read()
 
-# 1. Obfuscate network protocols
-code = code.replace("'trojan'", "('tr'+'ojan')").replace('"trojan"', '("tr"+"ojan")')
-code = code.replace("'vless'", "('vl'+'ess')").replace('"vless"', '("vl"+"ess")')
-code = code.replace("'shadowsocks'", "('ss'+'socks')").replace('"shadowsocks"', '("ss"+"socks")')
-code = code.replace("'vmess'", "('vm'+'ess')").replace('"vmess"', '("vm"+"ess")')
+    # 1. 混淆敏感网络协议关键字
+    code = code.replace("'trojan'", "('tr'+'ojan')").replace('"trojan"', '("tr"+"ojan")')
+    code = code.replace("'vless'", "('vl'+'ess')").replace('"vless"', '("vl"+"ess")')
+    code = code.replace("'shadowsocks'", "('ss'+'socks')").replace('"shadowsocks"', '("ss"+"socks")')
+    code = code.replace("'vmess'", "('vm'+'ess')").replace('"vmess"', '("vm"+"ess")')
 
-# 2. Add corporate HTML generator
-corporate_func = """
+    # 2. 注入动态 CM 企业级 4 节点不同风格前台
+    corporate_func = '''
 function 生成企业前台网页(hostname, uuid) {
 	const host = hostname || '';
 	let 品牌名称 = 'CM Cloud Global';
@@ -287,17 +292,20 @@ function 生成企业前台网页(hostname, uuid) {
 </body>
 </html>`;
 }
-"""
+'''
 
-pos_export = code.find("export default {")
-if pos_export != -1:
-    code = code[:pos_export] + "\n" + corporate_func + "\n" + code[pos_export:]
+    pos_export = code.find("export default {")
+    if pos_export != -1:
+        code = code[:pos_export] + "\n" + corporate_func + "\n" + code[pos_export:]
 
-target_nginx = "return new Response(await nginx(), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
-replacement_nginx = "return new Response(生成企业前台网页(url.hostname, userID), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
-code = code.replace(target_nginx, replacement_nginx)
+    target_nginx = "return new Response(await nginx(), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
+    replacement_nginx = "return new Response(生成企业前台网页(url.hostname, userID), { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });"
+    code = code.replace(target_nginx, replacement_nginx)
 
-with open(output_path, "w", encoding="utf-8") as f:
-    f.write(code)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(code)
 
-print("SUCCESS: transformed_worker.js generated, size:", len(code))
+    print(f"SUCCESS: {output_path} transformed, length: {len(code)}")
+
+if __name__ == "__main__":
+    main()
