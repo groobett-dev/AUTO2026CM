@@ -36,7 +36,6 @@ jobs:
           git remote add upstream https://github.com/cmliu/edgetunnel.git || true
           git fetch upstream main
           
-          # 精确检查本地分支落后上游的提交数
           COMMITS_BEHIND=$(git rev-list --count HEAD..upstream/main)
           echo "Commits behind upstream: $COMMITS_BEHIND"
           
@@ -52,7 +51,6 @@ jobs:
 
   deploy:
     needs: sync_upstream
-    # 核心判断逻辑：定时调度时，仅当上游有更新 (has_changes == 'true') 时才触发部署；无更新则不部署不推送
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -76,39 +74,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Dependencies
+      - name: Install Wrangler
         run: |
-          npm install -g wrangler javascript-obfuscator
+          npm install -g wrangler
 
-      - name: Obfuscate and Protect Worker Code
+      - name: Prepare Worker Script
         run: |
-          cp _worker.js raw_source.js
-          
-          # 1. 敏感协议关键词特征打碎 (准确支持单双引号切分)
-          sed -i 's/"vless"/("vl"+"ess")/gI' raw_source.js
-          sed -i "s/'vless'/('vl'+'ess')/gI" raw_source.js || true
-          sed -i 's/"trojan"/("tr"+"ojan")/gI' raw_source.js
-          sed -i "s/'trojan'/('tr'+'ojan')/gI" raw_source.js || true
-          sed -i 's/"shadowsocks"/("ss"+"socks")/gI' raw_source.js || true
-          
-          # 2. 避免原生常量 const 在重写 AST 冲突
-          sed -i 's/\bconst\b/let/g' raw_source.js
-          sed -i 's/const /let /g' raw_source.js
-          
-          # 3. 使用 javascript-obfuscator 进行深度加密与流混淆
-          javascript-obfuscator raw_source.js \
-            --output obfuscated_worker.js \
-            --compact true \
-            --control-flow-flattening true \
-            --control-flow-flattening-threshold 0.5 \
-            --numbers-to-expressions true \
-            --simplify true \
-            --string-array true \
-            --string-array-encoding 'base64' \
-            --string-array-threshold 0.8 \
-            --split-strings true \
-            --split-strings-chunk-length 5 \
-            --transform-object-keys true
+          # 代码已为纯中文语义化结构且自带 Base64 编码，直接使用
+          cp _worker.js app_worker.js
 
       - name: Resolve Node Credentials
         id: creds
@@ -144,8 +117,9 @@ jobs:
         run: |
           cat << 'EOF' > wrangler.toml
           name = "auto-cm-202610"
-          main = "obfuscated_worker.js"
+          main = "app_worker.js"
           compatibility_date = "2026-01-20"
+          workers_dev = false
 
           [vars]
           ADMIN = "${{ secrets.VAR_ADMIN }}"
