@@ -9,7 +9,6 @@ on:
     branches:
       - main
     paths:
-      - '_worker.js'
       - '.github/workflows/deploy-nodes.yml'
 
 jobs:
@@ -30,28 +29,39 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Sync with Upstream
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check and Sync with Upstream
         id: sync
         run: |
           git remote add upstream https://github.com/cmliu/edgetunnel.git || true
           git fetch upstream main
-          
+
           COMMITS_BEHIND=$(git rev-list --count HEAD..upstream/main)
           echo "Commits behind upstream: $COMMITS_BEHIND"
-          
-          if [ "$COMMITS_BEHIND" -gt 0 ]; then
-            echo "Upstream changes detected! Merging..."
-            git merge -X ours upstream/main -m "chore(sync): auto sync with upstream cmliu/edgetunnel" || true
-            git push origin main
+
+          if [ "$COMMITS_BEHIND" -gt 0 ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Changes detected or manual trigger! Pulling upstream _worker.js..."
+            git checkout upstream/main -- _worker.js || true
+
+            python scripts/transform.py _worker.js _worker.js
+
+            git add _worker.js
+            git commit -m "chore(sync): auto sync with upstream cmliu/edgetunnel and apply Chinese transformation" || true
+            git push origin main || true
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
-            echo "No upstream changes. Local is up to date."
+            echo "No upstream changes. Upstream is in sync."
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
   deploy:
     needs: sync_upstream
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || needs.sync_upstream.outputs.has_changes == 'true'
+    # 仅在手动触发、或检查到上游更新 (has_changes == 'true') 时才触发部署
+    if: github.event_name == 'workflow_dispatch' || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -77,11 +87,6 @@ jobs:
       - name: Install Wrangler
         run: |
           npm install -g wrangler
-
-      - name: Prepare Worker Script
-        run: |
-          # 代码已为纯中文语义化结构且自带 Base64 编码，直接使用
-          cp _worker.js app_worker.js
 
       - name: Resolve Node Credentials
         id: creds
@@ -117,7 +122,7 @@ jobs:
         run: |
           cat << 'EOF' > wrangler.toml
           name = "auto-cm-202610"
-          main = "app_worker.js"
+          main = "_worker.js"
           compatibility_date = "2026-01-20"
           workers_dev = false
 
