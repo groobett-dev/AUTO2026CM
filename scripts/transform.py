@@ -1,6 +1,5 @@
 import sys, re
 
-# 中文注释词库映射表（覆盖 Cloudflare Worker / edgetunnel 核心注释短语）
 COMMENT_DICT = {
     "set default values if not provided": "设置默认全局变量（若未提供环境配置）",
     "check if user is authenticated": "校验访问用户令牌与身份鉴权",
@@ -28,25 +27,20 @@ def translate_comment(comment_body: str) -> str:
     for en_phrase, zh_text in COMMENT_DICT.items():
         if en_phrase in lower:
             return " " + zh_text
-    # 若本身已包含中文，保持原样
-    if any("一" <= ch <= "鿿" for ch in stripped):
+    if any("\u4e00" <= ch <= "\u9fff" for ch in stripped):
         return " " + stripped
-    # 纯英文其它普通注释，增加中文语义前缀，消除英文特征库的指纹比对
     if stripped:
         return f" [系统注释] {stripped}"
     return ""
 
 def process_comments_only(code: str) -> str:
-    # 仅匹配 // 注释（排除 http://、https:// 等 URL 中的双斜杠）
     def replace_comment(match):
         raw = match.group(0)
         prefix = raw[:2]
         body = raw[2:]
         return prefix + translate_comment(body)
 
-    pattern = r"(?<!:)//[^
-
-]*"
+    pattern = r"(?<!:)//[^\r\n]*"
     return re.sub(pattern, replace_comment, code)
 
 def main():
@@ -60,7 +54,6 @@ def main():
     with open(input_path, "r", encoding="utf-8-sig") as f:
         code = f.read()
 
-    # 核心原则：不破坏任何 JS 语法与变量，只对 // 注释内容进行中文转义
     code = process_comments_only(code)
 
     with open(output_path, "w", encoding="utf-8") as f:
