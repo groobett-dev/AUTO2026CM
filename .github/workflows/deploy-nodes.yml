@@ -1,8 +1,8 @@
-name: Sync Upstream, Obfuscate and Deploy to 4 Nodes
+name: Sync Upstream and Deploy to Nodes
 
 on:
   schedule:
-    # 每天定时自动检查上游更新 (UTC 02:00 / 北京时间 10:00)
+    # 每天定时检测上游代码更新 (UTC 02:00 / 北京时间 10:00)
     - cron: '0 2 * * *'
   workflow_dispatch:
   push:
@@ -39,24 +39,23 @@ jobs:
         id: sync
         run: |
           python -u scripts/sync_upstream.py || (echo 'SYNC SCRIPT FAILED' && exit 1)
-          if [ "${{ steps.sync.outputs.has_changes }}" == "true" ] || [ -f .last_upstream_sha ]; then
+          if [ "${{ steps.sync.outputs.has_changes }}" == "true" ]; then
             git add _worker.js .last_upstream_sha
-            git diff --quiet && git diff --staged --quiet || git commit -m "chore(sync): update _worker.js with upstream + Chinese transformation"
+            git diff --quiet && git diff --staged --quiet || git commit -m "chore(sync): update _worker.js with upstream + Chinese comment translation"
             git push origin main || true
           fi
 
   deploy:
     needs: sync_upstream
-    # 核心原则：仅在检测到上游有新更新 (has_changes == 'true') 或手动主动触发时，才推送到 4 个 Worker
+    # 严格门禁：上游不更新则不执行、不推送、不每天报错
     if: github.event_name == 'workflow_dispatch' || needs.sync_upstream.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node:
           - domain: "auto-cm-202610.206.dpdns.org"
             zone: "206.dpdns.org"
-          - domain: "auto-cm-202610.207.dpdns.org"
-            zone: "207.dpdns.org"
           - domain: "auto-cm-202610.208.dpdns.org"
             zone: "208.dpdns.org"
           - domain: "auto-cm-202610.209.dpdns.org"
@@ -84,12 +83,6 @@ jobs:
               echo "key=${{ secrets.CF_KEY_206 }}" >> $GITHUB_OUTPUT
               echo "acc_id=${{ secrets.CF_ACCOUNT_206 }}" >> $GITHUB_OUTPUT
               echo "kv_id=${{ secrets.CF_KV_ID_206 }}" >> $GITHUB_OUTPUT
-              ;;
-            "207.dpdns.org")
-              echo "email=${{ secrets.CF_EMAIL_207 }}" >> $GITHUB_OUTPUT
-              echo "key=${{ secrets.CF_KEY_207 }}" >> $GITHUB_OUTPUT
-              echo "acc_id=${{ secrets.CF_ACCOUNT_207 }}" >> $GITHUB_OUTPUT
-              echo "kv_id=${{ secrets.CF_KV_ID_207 }}" >> $GITHUB_OUTPUT
               ;;
             "208.dpdns.org")
               echo "email=${{ secrets.CF_EMAIL_208 }}" >> $GITHUB_OUTPUT
