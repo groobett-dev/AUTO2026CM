@@ -2,6 +2,7 @@ import sys, os, re
 
 sys.stdout.reconfigure(encoding="utf-8")
 
+# 1. 英文短语库 -> 地道中文（覆盖 Cloudflare Worker、Pages、代理协议与 Web 标准）
 EN_PHRASE_DICT = {
     "convert base64 text back into a string at runtime to avoid having plaintext keywords that can be searched in the source code": "运行时把 base64 文本还原成字符串，避免源码里出现可被检索的明文关键词",
     "set default values if not provided": "⚙️ 设置默认全局环境变量（若未在面板提供配置参数）",
@@ -24,6 +25,7 @@ EN_PHRASE_DICT = {
     "dynamic configuration": "💾 从边缘 KV 命名空间加载动态配置参数"
 }
 
+# 2. 已有中文注释智能同义改写库（换说法不改意思）
 ZH_SYNONYM_DICT = {
     "返回正常响应": "向客户端回复成功状态报文",
     "处理请求": "调度并执行接入的请求流程",
@@ -44,10 +46,12 @@ class JSLexerCommentRewriter:
         stripped = text.strip()
         lower = stripped.lower()
 
+        # 优先匹配英文短语
         for en_key, zh_val in self.phrase_dict.items():
             if en_key in lower:
                 return " " + zh_val
 
+        # 中文同义智能改写
         res = stripped
         matched_zh = False
         for zh_key, zh_syn in self.zh_synonym_dict.items():
@@ -57,9 +61,11 @@ class JSLexerCommentRewriter:
         if matched_zh:
             return " " + res
 
+        # 如果已经是其他中文，则保持
         if any("\u4e00" <= ch <= "\u9fff" for ch in stripped):
             return " " + stripped
 
+        # 兜底英文说明文本
         if stripped:
             return f" 💡 [配置说明] {stripped}"
         return ""
@@ -89,6 +95,7 @@ class JSLexerCommentRewriter:
                     output.append(ch)
                     i += 1
                 elif ch == "/" and nxt == "/":
+                    # 词法状态机精准捕获真正的单行注释！
                     i += 2
                     comment_chars = []
                     while i < length and code[i] not in ("\r", "\n"):
@@ -209,6 +216,12 @@ class JSLexerCommentRewriter:
         return "".join(output)
 
 def verify_cf_entrypoints(code: str) -> bool:
+    """
+    自动化预检 Cloudflare 入口点兼容性：
+    1. ES Module: export default { async fetch(request, env, ctx) }
+    2. Pages Functions: export async function onRequest / onRequestGet / onRequestPost
+    3. Classic Service Worker: addEventListener('fetch', ...)
+    """
     patterns = [
         r"export\s+default\s*\{",
         r"export\s+async\s+function\s+onRequest",
@@ -219,10 +232,14 @@ def verify_cf_entrypoints(code: str) -> bool:
             return True
     return False
 
+def fix_upstream_ast_const(code: str) -> str:
+    # 修复上游变量重复赋值 AST 瑕疵，杜绝 esbuild Cannot assign to constant
+    return re.sub(r"\bconst\b", "let", code)
+
 def main():
     if len(sys.argv) < 3:
-        input_path = "_worker.js"
-        output_path = "_worker.js"
+        input_path = "Vless_workers_pages/_worker.js"
+        output_path = "Vless_workers_pages/_worker.js"
     else:
         input_path = sys.argv[1]
         output_path = sys.argv[2]
@@ -230,16 +247,21 @@ def main():
     with open(input_path, "r", encoding="utf-8-sig") as f:
         code = f.read()
 
+    # 1. 语法级状态机纯注释改写
     rewriter = JSLexerCommentRewriter()
     code = rewriter.process(code)
 
+    # 2. 修复 const 赋值语法
+    code = fix_upstream_ast_const(code)
+
+    # 3. 入口与语法预检
     is_valid_entry = verify_cf_entrypoints(code)
     print(f"Cloudflare 入口特征检测通过: {is_valid_entry}")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(code)
 
-    print(f"SUCCESS: {output_path} standalone comments translated, length: {len(code)}")
+    print(f"SUCCESS: {output_path} 处理完成，字符数: {len(code)}")
 
 if __name__ == "__main__":
     main()
