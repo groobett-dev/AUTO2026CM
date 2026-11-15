@@ -1,9 +1,9 @@
 name: Sync Upstream and Deploy to Nodes
 
 on:
-  schedule:
+  # schedule: disabled
     # 每天定时检测上游代码变更 (UTC 02:00 / 北京时间 10:00)
-    - cron: '0 2 * * *'
+    # - cron: disabled
   workflow_dispatch:
   push:
     branches:
@@ -54,7 +54,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - domain: "auto-cm-202610.206.dpdns.org"
+          - domain: "auto-cm-202610.208.dpdns.org"
             zone: "206.dpdns.org"
           - domain: "auto-cm-202610.207.dpdns.org"
             zone: "207.dpdns.org"
